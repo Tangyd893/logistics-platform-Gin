@@ -21,7 +21,6 @@ async function test(name, fn) {
   }
 }
 
-// Use page.evaluate + fetch for reliable JSON requests in this Playwright version
 async function apiFetch(method, path, body, headers = {}) {
   const result = await page.evaluate(async ({ method, url, body, headers }) => {
     const opts = {
@@ -63,8 +62,8 @@ await test('POST /api/auth/login succeeds with correct credentials', async () =>
   if (status !== 200) throw new Error(`expected 200, got ${status}`);
   if (!data?.data?.token) throw new Error(`no token in response: ${JSON.stringify(data)}`);
   token = data.data.token;
-  if (data.data.userInfo?.username !== 'admin') throw new Error('wrong username');
-  if (data.data.userInfo?.roleCode !== 'ADMIN') throw new Error('wrong roleCode');
+  if (data.data.user?.username !== 'admin') throw new Error(`wrong username: ${data.data.user?.username}`);
+  if (data.data.user?.roleCode !== 'ADMIN') throw new Error('wrong roleCode');
   console.log(`   Token: ${token.substring(0, 30)}...`);
 });
 
@@ -81,15 +80,16 @@ await test('GET /api/auth/me returns user info with valid token', async () => {
   if (data.data?.username !== 'admin') throw new Error(`expected admin, got ${data.data?.username}`);
 });
 
-// 6. Order list pagination
+// 6. Order list pagination (uses records/page/size/total format)
 await test('GET /api/order/orders returns paginated orders', async () => {
   const { status, data } = await apiAuth('GET', '/api/order/orders?page=1&pageSize=3', null, token);
   if (status !== 200) throw new Error(`expected 200, got ${status}`);
-  if (!Array.isArray(data.data?.list)) throw new Error(`list is not an array: ${JSON.stringify(data.data)}`);
+  if (!Array.isArray(data.data?.records)) throw new Error(`records is not an array: ${JSON.stringify(data.data)}`);
   if (!data.data?.total) throw new Error('total missing');
+  if (!data.data?.page) throw new Error('page missing');
 });
 
-// 7. Get order by ID (use existing order id=2 which is guaranteed to exist)
+// 7. Get order by ID
 await test('GET /api/order/orders/:id returns order detail', async () => {
   const { status, data } = await apiAuth('GET', '/api/order/orders/2', null, token);
   if (status !== 200) throw new Error(`expected 200, got ${status}`);
@@ -101,22 +101,22 @@ await test('GET /api/order/orders/:id returns order detail', async () => {
 await test('GET /api/warehouse/warehouses returns warehouse list', async () => {
   const { status, data } = await apiAuth('GET', '/api/warehouse/warehouses?page=1&pageSize=5', null, token);
   if (status !== 200) throw new Error(`expected 200, got ${status}`);
-  if (!Array.isArray(data.data?.list)) throw new Error('list is not an array');
-  if (data.data?.list?.length < 1) throw new Error('warehouse list should not be empty');
+  if (!Array.isArray(data.data?.records)) throw new Error('records is not an array');
+  if (data.data?.records?.length < 1) throw new Error('warehouse list should not be empty');
 });
 
 // 9. Transport drivers list
 await test('GET /api/transport/drivers returns driver list', async () => {
   const { status, data } = await apiAuth('GET', '/api/transport/drivers?page=1&pageSize=5', null, token);
   if (status !== 200) throw new Error(`expected 200, got ${status}`);
-  if (!Array.isArray(data.data?.list)) throw new Error('list is not an array');
+  if (!Array.isArray(data.data?.records)) throw new Error('records is not an array');
 });
 
 // 10. Transport vehicles list
 await test('GET /api/transport/vehicles returns vehicle list', async () => {
   const { status, data } = await apiAuth('GET', '/api/transport/vehicles?page=1&pageSize=5', null, token);
   if (status !== 200) throw new Error(`expected 200, got ${status}`);
-  if (!Array.isArray(data.data?.list)) throw new Error('list is not an array');
+  if (!Array.isArray(data.data?.records)) throw new Error('records is not an array');
 });
 
 // 11. Create order
@@ -136,7 +136,7 @@ await test('POST /api/order/orders creates a new order', async () => {
   console.log(`   Created order: ${data.data.orderNo}`);
 });
 
-// 12. Create warehouse (use unique code to avoid conflict)
+// 12. Create warehouse
 await test('POST /api/warehouse/warehouses creates a new warehouse', async () => {
   const ts = Date.now();
   const { status, data } = await apiAuth('POST', '/api/warehouse/warehouses', {

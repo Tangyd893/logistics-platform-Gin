@@ -22,7 +22,7 @@ func (h *WarehouseHandler) List(c *gin.Context) {
 		Limit(pageSize).
 		Find(&warehouses)
 
-	response.OK(c, gin.H{"list": warehouses, "total": total, "page": page, "pageSize": pageSize})
+	response.OK(c, gin.H{"records": warehouses, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *WarehouseHandler) GetByID(c *gin.Context) {
@@ -36,11 +36,11 @@ func (h *WarehouseHandler) GetByID(c *gin.Context) {
 }
 
 type WarehouseCreateRequest struct {
-	Code   string  `json:"code" binding:"required"`
-	Name   string  `json:"name" binding:"required"`
-	Address string `json:"address"`
-	Manager string `json:"manager"`
-	Phone  string  `json:"phone"`
+	Code          string  `json:"code" binding:"required"`
+	Name          string  `json:"name" binding:"required"`
+	Address       string  `json:"address"`
+	Manager       string  `json:"manager"`
+	Phone         string  `json:"phone"`
 	TotalCapacity float64 `json:"totalCapacity"`
 }
 
@@ -51,13 +51,13 @@ func (h *WarehouseHandler) Create(c *gin.Context) {
 		return
 	}
 	wh := model.WhWarehouse{
-		Code:   req.Code,
-		Name:   req.Name,
-		Address: req.Address,
-		Manager: req.Manager,
-		Phone:  req.Phone,
+		Code:          req.Code,
+		Name:          req.Name,
+		Address:       req.Address,
+		Manager:       req.Manager,
+		Phone:         req.Phone,
 		TotalCapacity: req.TotalCapacity,
-		Status: 1,
+		Status:        1,
 	}
 	if err := db.Create(&wh).Error; err != nil {
 		response.ServerError(c, "创建仓库失败")
@@ -74,9 +74,11 @@ func (h *WarehouseHandler) Update(c *gin.Context) {
 		return
 	}
 	updates := map[string]interface{}{
-		"name": req.Name, "address": req.Address,
-		"manager": req.Manager, "phone": req.Phone,
-		"total_capacity": req.TotalCapacity,
+		"name":            req.Name,
+		"address":         req.Address,
+		"manager":         req.Manager,
+		"phone":           req.Phone,
+		"total_capacity":  req.TotalCapacity,
 	}
 	db.Model(&model.WhWarehouse{}).Where("id = ?", id).Updates(updates)
 	response.OK(c, gin.H{"message": "更新成功"})
@@ -104,17 +106,17 @@ func (h *LocationHandler) List(c *gin.Context) {
 	var total int64
 	query.Count(&total)
 	var locations []model.WhLocation
-	query.Offset((page-1)*pageSize).Limit(pageSize).Find(&locations)
-	response.OK(c, gin.H{"list": locations, "total": total, "page": page, "pageSize": pageSize})
+	query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&locations)
+	response.OK(c, gin.H{"records": locations, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *LocationHandler) Create(c *gin.Context) {
 	var req struct {
-		WarehouseID int64   `json:"warehouseId" binding:"required"`
-		ZoneID      *int64 `json:"zoneId"`
-		Code        string `json:"code" binding:"required"`
-		Type        string `json:"type"`
-		ShelfLayer  int    `json:"shelfLayer"`
+		WarehouseID int64    `json:"warehouseId" binding:"required"`
+		ZoneID      *int64  `json:"zoneId"`
+		Code        string  `json:"code" binding:"required"`
+		Type        string  `json:"type"`
+		ShelfLayer  int     `json:"shelfLayer"`
 		Capacity    float64 `json:"capacity"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -123,12 +125,12 @@ func (h *LocationHandler) Create(c *gin.Context) {
 	}
 	loc := model.WhLocation{
 		WarehouseID: req.WarehouseID,
-		ZoneID:      req.ZoneID,
-		Code:        req.Code,
-		Type:        req.Type,
-		ShelfLayer:  req.ShelfLayer,
-		Capacity:    req.Capacity,
-		Status:      1,
+		ZoneID:       req.ZoneID,
+		Code:         req.Code,
+		Type:         req.Type,
+		ShelfLayer:   req.ShelfLayer,
+		Capacity:     req.Capacity,
+		Status:       1,
 	}
 	db.Create(&loc)
 	response.OK(c, loc)
@@ -144,25 +146,28 @@ func (h *InboundHandler) List(c *gin.Context) {
 	db.Model(&model.WhInboundOrder{}).Where("deleted = false").Count(&total)
 	var orders []model.WhInboundOrder
 	db.Where("deleted = false").Offset((page-1)*pageSize).Limit(pageSize).Find(&orders)
-	response.OK(c, gin.H{"list": orders, "total": total, "page": page, "pageSize": pageSize})
+	response.OK(c, gin.H{"records": orders, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *InboundHandler) Create(c *gin.Context) {
 	var req struct {
-		OrderNo      string  `json:"orderNo" binding:"required"`
-		WarehouseID  int64   `json:"warehouseId" binding:"required"`
-		SupplierName string  `json:"supplierName"`
-		InboundType  string  `json:"inboundType"`
-		Remark       string  `json:"remark"`
+		OrderNo      string `json:"orderNo" binding:"required"`
+		WarehouseID  int64  `json:"warehouseId" binding:"required"`
+		SupplierName string `json:"supplierName"`
+		InboundType  string `json:"inboundType"`
+		Remark       string `json:"remark"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误")
 		return
 	}
 	order := model.WhInboundOrder{
-		OrderNo: req.OrderNo, WarehouseID: req.WarehouseID,
-		SupplierName: req.SupplierName, InboundType: req.InboundType,
-		Status: 10, Remark: req.Remark,
+		OrderNo:      req.OrderNo,
+		WarehouseID:  req.WarehouseID,
+		SupplierName: req.SupplierName,
+		InboundType:  req.InboundType,
+		Status:       10,
+		Remark:       req.Remark,
 	}
 	db.Create(&order)
 	response.OK(c, order)
@@ -178,7 +183,7 @@ func (h *OutboundHandler) List(c *gin.Context) {
 	db.Model(&model.WhOutboundOrder{}).Where("deleted = false").Count(&total)
 	var orders []model.WhOutboundOrder
 	db.Where("deleted = false").Offset((page-1)*pageSize).Limit(pageSize).Find(&orders)
-	response.OK(c, gin.H{"list": orders, "total": total, "page": page, "pageSize": pageSize})
+	response.OK(c, gin.H{"records": orders, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *OutboundHandler) Create(c *gin.Context) {
@@ -187,7 +192,7 @@ func (h *OutboundHandler) Create(c *gin.Context) {
 		WarehouseID     int64  `json:"warehouseId" binding:"required"`
 		CustomerName    string `json:"customerName"`
 		CustomerAddress string `json:"customerAddress"`
-		CustomerPhone  string `json:"customerPhone"`
+		CustomerPhone   string `json:"customerPhone"`
 		OutboundType    string `json:"outboundType"`
 		Remark          string `json:"remark"`
 	}
@@ -196,10 +201,14 @@ func (h *OutboundHandler) Create(c *gin.Context) {
 		return
 	}
 	order := model.WhOutboundOrder{
-		OrderNo: req.OrderNo, WarehouseID: req.WarehouseID,
-		CustomerName: req.CustomerName, CustomerAddress: req.CustomerAddress,
-		CustomerPhone: req.CustomerPhone, OutboundType: req.OutboundType,
-		Status: 10, Remark: req.Remark,
+		OrderNo:         req.OrderNo,
+		WarehouseID:     req.WarehouseID,
+		CustomerName:    req.CustomerName,
+		CustomerAddress: req.CustomerAddress,
+		CustomerPhone:   req.CustomerPhone,
+		OutboundType:    req.OutboundType,
+		Status:          10,
+		Remark:          req.Remark,
 	}
 	db.Create(&order)
 	response.OK(c, order)
@@ -221,6 +230,6 @@ func (h *InventoryHandler) List(c *gin.Context) {
 	var total int64
 	query.Count(&total)
 	var items []model.WhInventory
-	query.Offset((page-1)*pageSize).Limit(pageSize).Find(&items)
-	response.OK(c, gin.H{"list": items, "total": total, "page": page, "pageSize": pageSize})
+	query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&items)
+	response.OK(c, gin.H{"records": items, "total": total, "page": page, "size": pageSize})
 }

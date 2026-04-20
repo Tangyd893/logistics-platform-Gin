@@ -100,11 +100,11 @@ func (h *OrderHandler) Page(c *gin.Context) {
 	}
 
 	response.OK(c, gin.H{
-		"list":        orders,
-		"total":       total,
-		"page":        page,
-		"pageSize":    pageSize,
-		"totalPages":  totalPages,
+		"records":    orders,
+		"total":      total,
+		"page":       page,
+		"size":       pageSize,
+		"pages":      totalPages,
 	})
 }
 

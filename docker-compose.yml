@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # ===================== 后端服务 =====================
+  backend:
+    image: golang:1.23-alpine
+    container_name: logistics-gin-backend
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=logistics_user
+      - DB_PASSWORD=logistics_pass
+      - DB_NAME=logistics
+      - JWT_SECRET=logistics-platform-secret-key-256bit
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+      wget -qO- https://go.dev/dl/go1.23.4.linux-amd64.tar.gz | tar -xzf - -C /usr/local &&
+      export PATH=/usr/local/go/bin:$PATH &&
+      export GOPROXY=https://goproxy.cn,direct &&
+      cd /app &&
+      go build -o logistics-gin . &&
+      ./logistics-gin
+      "
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 1
+
+  # ===================== 前端开发服务器 =====================
+  frontend:
+    image: node:20-alpine
+    container_name: logistics-gin-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+    command: >
+      sh -c "
+      cd /app &&
+      npm install &&
+      npx vite --port 3000 --host 0.0.0.0
+      "
+    depends_on:
+      - backend
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+
+  # ===================== 数据库 =====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: logistics-gin-postgres
+    environment:
+      POSTGRES_DB: logistics
+      POSTGRES_USER: logistics_user
+      POSTGRES_PASSWORD: logistics_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logistics_user -d logistics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 512m
+
+  # ===================== Redis（可选） =====================
+  redis:
+    image: redis:7-alpine
+    container_name: logistics-gin-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    mem_limit: 256m
+
+volumes:
+  postgres_data:
+  redis_data:

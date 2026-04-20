@@ -23,7 +23,7 @@ func (h *UserHandler) List(c *gin.Context) {
 		Limit(pageSize).
 		Find(&users)
 
-	response.OK(c, gin.H{"list": users, "total": total, "page": page, "pageSize": pageSize})
+	response.OK(c, gin.H{"records": users, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {

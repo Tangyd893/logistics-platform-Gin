@@ -15,24 +15,26 @@ func (h *DriverHandler) List(c *gin.Context) {
 	var total int64
 	db.Model(&model.TDriver{}).Where("deleted = false").Count(&total)
 	var drivers []model.TDriver
-	db.Where("deleted = false").Offset((page-1)*pageSize).Limit(pageSize).Find(&drivers)
-	response.OK(c, gin.H{"list": drivers, "total": total, "page": page, "pageSize": pageSize})
+	db.Where("deleted = false").Offset((page - 1) * pageSize).Limit(pageSize).Find(&drivers)
+	response.OK(c, gin.H{"records": drivers, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *DriverHandler) Create(c *gin.Context) {
 	var req struct {
-		Name       string `json:"name" binding:"required"`
-		Phone      string `json:"phone" binding:"required"`
-		LicenseNo  string `json:"licenseNo"`
-		IDCard     string `json:"idCard"`
-		WarehouseID *int64 `json:"warehouseId"`
+		Name         string  `json:"name" binding:"required"`
+		Phone        string  `json:"phone" binding:"required"`
+		LicenseNo    string  `json:"licenseNo"`
+		IDCard       string  `json:"idCard"`
+		WarehouseID *int64  `json:"warehouseId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误")
 		return
 	}
-	d := model.TDriver{Name: req.Name, Phone: req.Phone, LicenseNo: req.LicenseNo,
-		IDCard: req.IDCard, WarehouseID: req.WarehouseID, Status: 1}
+	d := model.TDriver{
+		Name: req.Name, Phone: req.Phone, LicenseNo: req.LicenseNo,
+		IDCard: req.IDCard, WarehouseID: req.WarehouseID, Status: 1,
+	}
 	db.Create(&d)
 	response.OK(c, d)
 }
@@ -45,8 +47,8 @@ func (h *VehicleHandler) List(c *gin.Context) {
 	var total int64
 	db.Model(&model.TVehicle{}).Where("deleted = false").Count(&total)
 	var vehicles []model.TVehicle
-	db.Where("deleted = false").Offset((page-1)*pageSize).Limit(pageSize).Find(&vehicles)
-	response.OK(c, gin.H{"list": vehicles, "total": total, "page": page, "pageSize": pageSize})
+	db.Where("deleted = false").Offset((page - 1) * pageSize).Limit(pageSize).Find(&vehicles)
+	response.OK(c, gin.H{"records": vehicles, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *VehicleHandler) Create(c *gin.Context) {
@@ -60,8 +62,10 @@ func (h *VehicleHandler) Create(c *gin.Context) {
 		response.BadRequest(c, "参数错误")
 		return
 	}
-	v := model.TVehicle{PlateNo: req.PlateNo, Type: req.Type,
-		CapacityKg: req.CapacityKg, CapacityCbm: req.CapacityCbm, Status: 1}
+	v := model.TVehicle{
+		PlateNo: req.PlateNo, Type: req.Type,
+		CapacityKg: req.CapacityKg, CapacityCbm: req.CapacityCbm, Status: 1,
+	}
 	db.Create(&v)
 	response.OK(c, v)
 }
@@ -74,23 +78,25 @@ func (h *WaybillHandler) List(c *gin.Context) {
 	var total int64
 	db.Model(&model.TWaybill{}).Where("deleted = false").Count(&total)
 	var waybills []model.TWaybill
-	db.Where("deleted = false").Offset((page-1)*pageSize).Limit(pageSize).Find(&waybills)
-	response.OK(c, gin.H{"list": waybills, "total": total, "page": page, "pageSize": pageSize})
+	db.Where("deleted = false").Offset((page - 1) * pageSize).Limit(pageSize).Find(&waybills)
+	response.OK(c, gin.H{"records": waybills, "total": total, "page": page, "size": pageSize})
 }
 
 func (h *WaybillHandler) Create(c *gin.Context) {
 	var req struct {
-		WaybillNo string  `json:"waybillNo" binding:"required"`
-		OrderID   *int64  `json:"orderId"`
-		DriverID  *int64  `json:"driverId"`
-		VehicleID *int64  `json:"vehicleId"`
+		WaybillNo string `json:"waybillNo" binding:"required"`
+		OrderID   *int64 `json:"orderId"`
+		DriverID  *int64 `json:"driverId"`
+		VehicleID *int64 `json:"vehicleId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误")
 		return
 	}
-	w := model.TWaybill{WaybillNo: req.WaybillNo, OrderID: req.OrderID,
-		DriverID: req.DriverID, VehicleID: req.VehicleID, Status: 1}
+	w := model.TWaybill{
+		WaybillNo: req.WaybillNo, OrderID: req.OrderID,
+		DriverID: req.DriverID, VehicleID: req.VehicleID, Status: 1,
+	}
 	db.Create(&w)
 	response.OK(c, w)
 }
@@ -106,12 +112,12 @@ func (h *TrackingHandler) List(c *gin.Context) {
 
 func (h *TrackingHandler) Add(c *gin.Context) {
 	var req struct {
-		WaybillID    int64   `json:"waybillId" binding:"required"`
-		Status       int     `json:"status" binding:"required"`
-		Location     string  `json:"location"`
-		Latitude     *float64 `json:"latitude"`
-		Longitude    *float64 `json:"longitude"`
-		Description  string  `json:"description"`
+		WaybillID   int64     `json:"waybillId" binding:"required"`
+		Status      int       `json:"status" binding:"required"`
+		Location    string    `json:"location"`
+		Latitude    *float64  `json:"latitude"`
+		Longitude   *float64  `json:"longitude"`
+		Description string    `json:"description"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误")

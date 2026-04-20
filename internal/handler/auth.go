@@ -16,16 +16,18 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token        string       `json:"token"`
-	RefreshToken string       `json:"refreshToken"`
-	ExpiresIn    int64        `json:"expiresIn"`
-	UserInfo     *UserInfoVO  `json:"userInfo"`
+	Token        string     `json:"token"`
+	RefreshToken string     `json:"refreshToken"`
+	ExpiresIn    int64      `json:"expiresIn"`
+	User         *UserVO    `json:"user"`
 }
 
-type UserInfoVO struct {
+type UserVO struct {
+	ID          int64   `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 	RoleCode    string `json:"roleCode"`
+	Avatar      string `json:"avatar"`
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -46,8 +48,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	expMs := int64(86400000) // 24h
-	refreshExpMs := int64(604800000) // 7d
+	expMs := int64(86400000)
+	refreshExpMs := int64(604800000)
 
 	token, err := utils.GenerateToken(user.Username, user.RoleCode, expMs)
 	if err != nil {
@@ -65,10 +67,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Token:        token,
 		RefreshToken: refreshToken,
 		ExpiresIn:    expMs / 1000,
-		UserInfo: &UserInfoVO{
+		User: &UserVO{
+			ID:          user.ID,
 			Username:    user.Username,
 			DisplayName: user.DisplayName,
 			RoleCode:    user.RoleCode,
+			Avatar:      "",
 		},
 	}
 	response.OK(c, resp)
@@ -94,9 +98,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	}
 
 	token, _ := utils.GenerateToken(user.Username, user.RoleCode, 86400000)
-	response.OK(c, gin.H{
-		"token": token,
-	})
+	response.OK(c, gin.H{"token": token})
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {
@@ -106,10 +108,12 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		response.Fail(c, 404, "用户不存在")
 		return
 	}
-	response.OK(c, UserInfoVO{
+	response.OK(c, &UserVO{
+		ID:          user.ID,
 		Username:    user.Username,
 		DisplayName: user.DisplayName,
 		RoleCode:    user.RoleCode,
+		Avatar:      "",
 	})
 }
 
