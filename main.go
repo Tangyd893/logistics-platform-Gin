@@ -20,7 +20,8 @@ import (
 
 var (
 	rocketMQSvc *service.RocketMQService
-	minIOSvc    *service.MinIOService
+	minIOSvc   *service.MinIOService
+	cacheSvc   *service.CacheService
 )
 
 func main() {
@@ -66,8 +67,19 @@ func main() {
 		log.Println("[MinIO] 未启用（MINIO_ENABLED=false）")
 	}
 
+	// Initialize Redis（失败不影响主服务）
+	if cfg.RedisEnabled {
+		cacheSvc, err = service.NewCacheService()
+		if err != nil {
+			log.Printf("[Redis] 初始化失败: %v（将跳过缓存功能）", err)
+			cacheSvc = nil
+		}
+	} else {
+		log.Println("[Redis] 未启用（REDIS_ENABLED=false）")
+	}
+
 	// Expose services to handlers
-	handler.InitServices(rocketMQSvc, minIOSvc)
+	handler.InitServices(rocketMQSvc, minIOSvc, cacheSvc)
 
 	// Safe schema creation
 	if err := db.Exec("CREATE SCHEMA IF NOT EXISTS public").Error; err != nil {
@@ -124,6 +136,9 @@ func main() {
 		if rocketMQSvc != nil {
 			rocketMQSvc.Shutdown()
 		}
+		if cacheSvc != nil {
+			cacheSvc.Shutdown()
+		}
 	}()
 
 	port := os.Getenv("PORT")
@@ -133,6 +148,7 @@ func main() {
 	fmt.Printf("Logistics Platform Gin running on :%s\n", port)
 	fmt.Printf("  RocketMQ: %s\n", map[bool]string{true: "enabled", false: "disabled"}[cfg.RocketMQEnabled])
 	fmt.Printf("  MinIO:    %s\n", map[bool]string{true: "enabled", false: "disabled"}[cfg.MinIOEnabled])
+	fmt.Printf("  Redis:    %s\n", map[bool]string{true: "enabled", false: "disabled"}[cfg.RedisEnabled])
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

@@ -24,11 +24,18 @@ type Config struct {
 	RocketMQLoglevel    string
 
 	// MinIO
-	MinIOEnabled  bool
-	MinIOEndpoint string
+	MinIOEnabled   bool
+	MinIOEndpoint  string
 	MinIOAccessKey string
 	MinIOSecretKey string
 	MinIOBucket    string
+
+	// Redis 配置
+	RedisEnabled  bool
+	RedisHost     string
+	RedisPort     string
+	RedisPassword string
+	RedisDB       int
 }
 
 func Load() *Config {
@@ -48,11 +55,18 @@ func Load() *Config {
 		RocketMQLoglevel:   getEnv("ROCKETMQ_LOG_LEVEL", "warn"),
 
 		// MinIO 配置
-		MinIOEnabled:  getEnvBool("MINIO_ENABLED", false),
-		MinIOEndpoint: getEnv("MINIO_ENDPOINT", "localhost:9000"),
+		MinIOEnabled:   getEnvBool("MINIO_ENABLED", false),
+		MinIOEndpoint:  getEnv("MINIO_ENDPOINT", "localhost:9000"),
 		MinIOAccessKey: getEnv("MINIO_ACCESS_KEY", "minioadmin"),
 		MinIOSecretKey: getEnv("MINIO_SECRET_KEY", "minioadmin"),
-		MinIOBucket:   getEnv("MINIO_BUCKET", "logistics"),
+		MinIOBucket:    getEnv("MINIO_BUCKET", "logistics"),
+
+		// Redis 配置
+		RedisEnabled:  getEnvBool("REDIS_ENABLED", false),
+		RedisHost:     getEnv("REDIS_HOST", "localhost"),
+		RedisPort:     getEnv("REDIS_PORT", "6379"),
+		RedisPassword: getEnv("REDIS_PASSWORD", ""),
+		RedisDB:       getEnvInt("REDIS_DB", 0),
 	}
 }
 
@@ -70,6 +84,15 @@ func getEnv(key, defaultVal string) string {
 func getEnvBool(key string, defaultVal bool) bool {
 	if val := os.Getenv(key); val != "" {
 		if parsed, err := strconv.ParseBool(val); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	if val := os.Getenv(key); val != "" {
+		if parsed, err := strconv.Atoi(val); err == nil {
 			return parsed
 		}
 	}
