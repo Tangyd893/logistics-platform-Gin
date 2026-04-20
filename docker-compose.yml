@@ -27,6 +27,10 @@ services:
       # RocketMQ
       - ROCKETMQ_ENABLED=true
       - ROCKETMQ_NAMESRV_ADDR=rocketmq-namesrv:9876
+      # Redis
+      - REDIS_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       postgres:
         condition: service_healthy
