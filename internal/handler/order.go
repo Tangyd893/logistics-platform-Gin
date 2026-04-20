@@ -6,17 +6,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"logistics-platform-gin/internal/model"
 	"logistics-platform-gin/pkg/response"
 )
-
-// Package-level db reference — initialized in main.go
-var db *gorm.DB
-
-func InitDB(database *gorm.DB) {
-	db = database
-}
 
 type PageQuery struct {
 	Page     int    `form:"page" json:"page"`

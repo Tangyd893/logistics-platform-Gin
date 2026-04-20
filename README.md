@@ -95,6 +95,9 @@ npx vite --port 3000
 | 运输管理 | ✅ | 司机/车辆/运单/配送跟踪 |
 | 系统管理 | ✅ | 用户 CRUD |
 | 前端页面 | ✅ | 全部页面从原项目迁移 |
+| RocketMQ 消息队列 | ✅ | 订单事件发布（创建/发货/送达） |
+| MinIO 对象存储 | ✅ | 头像/订单附件上传 |
+| Docker 部署 | ✅ | PostgreSQL + Redis + MinIO + RocketMQ |
 
 ## 🧪 测试
 
@@ -115,7 +118,9 @@ node test-e2e.mjs
 | 内存占用 | ≥768MB | ~30MB |
 | API 响应格式 | `{records,total,pages}` | 完全一致 ✅ |
 | 前端调用方式 | 无需任何修改 | 完全兼容 |
-| 未迁移功能 | RocketMQ/MinIO | 可按需扩展 |
+| RocketMQ | RocketMQ 5.x（Java SDK） | RocketMQ 5.x（HTTP REST） |
+| MinIO | MinIO Java SDK | MinIO Go SDK |
+| Docker 部署 | 手动 | docker-compose 一键 |
 
 ## 📝 主要文件说明
 
@@ -142,4 +147,4 @@ node test-e2e.mjs
 
 **前端：** React 18 · Vite 5 · TypeScript 5 · Zustand · Tailwind CSS · React Router 6 · Axios · ECharts · Leaflet
 
-**基础设施：** Docker · Docker Compose · PostgreSQL · Redis
+**基础设施：** Docker · Docker Compose · PostgreSQL 16 · Redis 7 · MinIO · RocketMQ 5.3.0

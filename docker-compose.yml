@@ -18,8 +18,19 @@ services:
       - DB_PASSWORD=logistics_pass
       - DB_NAME=logistics
       - JWT_SECRET=logistics-platform-secret-key-256bit
+      # MinIO
+      - MINIO_ENABLED=true
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=logistics
+      # RocketMQ
+      - ROCKETMQ_ENABLED=true
+      - ROCKETMQ_NAMESRV_ADDR=rocketmq-namesrv:9876
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     command: >
       sh -c "
@@ -31,7 +42,7 @@ services:
       ./logistics-gin
       "
     restart: unless-stopped
-    mem_limit: 256m
+    mem_limit: 512m
     cpus: 1
 
   # ===================== 前端开发服务器 =====================
@@ -44,7 +55,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8080
+      - VITE_API_BASE_URL=http://backend:8080
     command: >
       sh -c "
       cd /app &&
@@ -88,6 +99,63 @@ services:
     restart: unless-stopped
     mem_limit: 256m
 
+  # ===================== MinIO 对象存储 =====================
+  minio:
+    image: minio/minio:latest
+    container_name: logistics-gin-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    mem_limit: 300m
+
+  # ===================== RocketMQ NameServer =====================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.0
+    container_name: logistics-gin-rocketmq-namesrv
+    ports:
+      - "9876:9876"
+    environment:
+      JAVA_OPT: "-Xms200m -Xmx200m"
+    volumes:
+      - rocketmq_namesrv_data:/home/rocketmq/namesrv/logs
+    command: sh mqnamesrv
+    restart: unless-stopped
+    mem_limit: 200m
+
+  # ===================== RocketMQ Broker =====================
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.0
+    container_name: logistics-gin-rocketmq-broker
+    ports:
+      - "10911:10911"
+    environment:
+      JAVA_OPT: "-Xms1g -Xmx1g"
+      ROCKETMQ_HOME: /home/rocketmq/rocketmq-5.3.0
+    volumes:
+      - rocketmq_broker_data:/home/rocketmq/broker/logs
+    depends_on:
+      - rocketmq-namesrv
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.3.0/broker.conf
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    mem_limit: 1536m
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
+  rocketmq_namesrv_data:
+  rocketmq_broker_data:
