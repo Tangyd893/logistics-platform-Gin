@@ -5,9 +5,9 @@ services:
   backend:
     image: golang:1.23-alpine
     container_name: logistics-gin-backend
-    working_dir: /app
+    working_dir: /app/backend
     volumes:
-      - ./:/app
+      - ./backend:/app/backend
     ports:
       - "8080:8080"
     environment:
@@ -41,7 +41,7 @@ services:
       wget -qO- https://go.dev/dl/go1.23.4.linux-amd64.tar.gz | tar -xzf - -C /usr/local &&
       export PATH=/usr/local/go/bin:$PATH &&
       export GOPROXY=https://goproxy.cn,direct &&
-      cd /app &&
+      cd /app/backend &&
       go build -o logistics-gin . &&
       ./logistics-gin
       "

@@ -6,50 +6,54 @@
 
 ```
 logistics-platform-Gin/
-├── main.go                    # 入口：数据库连接 → AutoMigrate → 注册路由 → 监听 8080
-├── config/
-│   └── config.go            # 配置加载（DB/JWT/环境变量）
-├── internal/
-│   ├── model/               # 实体定义（GORM 模型）
-│   │   ├── system.go       # SysUser / SysRole / SysDept / SysMenu
-│   │   ├── order.go        # OOrder / OOrderItem / OOrderStatusLog
-│   │   ├── warehouse.go    # WhWarehouse / WhZone / WhLocation / WhInventory / WhInbound* / WhOutbound*
-│   │   └── transport.go    # TDriver / TVehicle / TWaybill / TTracking
-│   ├── handler/             # 请求处理层
-│   │   ├── auth.go         # 登录/刷新/当前用户/登出
-│   │   ├── order.go        # 订单 CRUD + 状态流转
-│   │   ├── user.go         # 用户 CRUD
-│   │   ├── warehouse.go    # 仓库/库位/入库/出库/库存
-│   │   └── transport.go    # 司机/车辆/运单/轨迹
-│   ├── middleware/
-│   │   └── middleware.go   # JWT 认证 / 角色权限检查 / CORS
-│   ├── router/
-│   │   └── router.go       # 路由注册（Gin 分组路由）
-│   └── service/
-│       ├── minio.go        # MinIO 对象存储
-│       ├── redis.go        # Redis 缓存
-│       └── rocketmq.go     # RocketMQ 消息队列
-├── pkg/
-│   ├── response/            # 统一响应封装
-│   │   └── response.go     # {code, message, data, timestamp}
-│   └── utils/
-│       └── jwt.go          # JWT 生成 / 解析 / 刷新令牌
-├── cmd/
-│   └── genpwd/main.go      # bcrypt 密码哈希生成工具
-├── frontend/                 # React 18 前端（从原 logistics-platform 迁移）
+├── backend/                 # Go/Gin 后端
+│   ├── main.go            # 入口：数据库连接 → AutoMigrate → 注册路由 → 监听 8080
+│   ├── go.mod / go.sum    # Go 依赖
+│   ├── logistics-gin      # 编译产物（二进制可执行文件）
+│   ├── config/
+│   │   └── config.go      # 配置加载（DB/JWT/环境变量）
+│   ├── internal/
+│   │   ├── model/         # 实体定义（GORM 模型）
+│   │   │   ├── system.go  # SysUser / SysRole / SysDept / SysMenu
+│   │   │   ├── order.go   # OOrder / OOrderItem / OOrderStatusLog
+│   │   │   ├── warehouse.go  # WhWarehouse / WhZone / WhLocation / WhInventory / WhInbound* / WhOutbound*
+│   │   │   └── transport.go  # TDriver / TVehicle / TWaybill / TTracking
+│   │   ├── handler/       # 请求处理层
+│   │   │   ├── auth.go    # 登录/刷新/当前用户/登出
+│   │   │   ├── order.go   # 订单 CRUD + 状态流转
+│   │   │   ├── user.go    # 用户 CRUD
+│   │   │   ├── warehouse.go  # 仓库/库位/入库/出库/库存
+│   │   │   └── transport.go   # 司机/车辆/运单/轨迹
+│   │   ├── middleware/
+│   │   │   └── middleware.go  # JWT 认证 / 角色权限检查 / CORS
+│   │   ├── router/
+│   │   │   └── router.go  # 路由注册（Gin 分组路由）
+│   │   └── service/
+│   │       ├── minio.go   # MinIO 对象存储
+│   │       ├── redis.go   # Redis 缓存
+│   │       └── rocketmq.go  # RocketMQ 消息队列
+│   ├── pkg/
+│   │   ├── response/
+│   │   │   └── response.go  # 统一响应封装 {code, message, data, timestamp}
+│   │   └── utils/
+│   │       └── jwt.go     # JWT 生成 / 解析 / 刷新令牌
+│   ├── cmd/
+│   │   └── genpwd/main.go  # bcrypt 密码哈希生成工具
+│   └── sql/
+│       └── init.sql      # PostgreSQL 建表脚本（与原项目共用）
+│
+├── frontend/               # React 18 前端（从原 logistics-platform 迁移）
 │   ├── src/
-│   │   ├── lib/api.ts      # Axios 请求封装（与原项目完全兼容）
-│   │   ├── store/auth.ts   # Zustand 认证状态
-│   │   └── pages/          # 全部业务页面
-│   ├── vite.config.ts      # Vite 配置
+│   │   ├── lib/api.ts     # Axios 请求封装（与原项目完全兼容）
+│   │   ├── store/auth.ts  # Zustand 认证状态
+│   │   └── pages/         # 全部业务页面
+│   ├── vite.config.ts     # Vite 配置
 │   └── package.json
-├── sql/
-│   └── init.sql            # PostgreSQL 建表脚本（与原项目共用）
-├── docker-compose.yml       # Docker 全家桶部署
-├── docs/                    # 项目文档
-├── test-e2e.mjs            # Playwright E2E 测试（13/13 通过）
-├── go.mod / go.sum         # Go 依赖
-└── logistics-gin           # 编译产物（二进制可执行文件）
+│
+├── docker-compose.yml      # Docker 全家桶部署
+├── docs/                   # 项目文档
+├── test-e2e.mjs           # Playwright E2E 测试（13/13 通过）
+└── README.md
 ```
 
 ## 🚀 快速启动
@@ -88,17 +92,13 @@ docker compose up -d postgres redis
 **2. 初始化数据库（如需要）：**
 ```bash
 docker exec -i logistics_postgres psql -U logistics_user -d logistics \
-  < sql/init.sql
+  < ~/.openclaw/workspace/output/logistics-platform-Gin/backend/sql/init.sql
 ```
 
 **3. 启动后端：**
 ```bash
-cd ~/.openclaw/workspace/output/logistics-platform-Gin
-
-# 编译
+cd backend
 go build -o logistics-gin .
-
-# 运行
 ./logistics-gin
 ```
 
@@ -133,7 +133,7 @@ npx vite --port 3000
 
 ```bash
 # Go 单元测试
-go test ./...
+cd backend && go test ./...
 
 # Playwright E2E 测试（需先启动后端）
 node test-e2e.mjs
@@ -154,13 +154,13 @@ node test-e2e.mjs
 
 ## 📝 主要文件说明
 
-- `main.go` — 启动入口（数据库连接 → AutoMigrate → 注册路由 → 监听 8080）
-- `internal/router/router.go` — 所有路由注册
-- `internal/middleware/middleware.go` — JWT 认证 + CORS 中间件
-- `internal/handler/` — 全部处理器（Auth/Order/Warehouse/Transport/User）
-- `pkg/response/response.go` — 统一响应格式 `{code, message, data, timestamp}`
-- `pkg/utils/jwt.go` — JWT 生成/解析工具
-- `sql/init.sql` — PostgreSQL 建表（与原项目共用）
+- `backend/main.go` — 启动入口（数据库连接 → AutoMigrate → 注册路由 → 监听 8080）
+- `backend/internal/router/router.go` — 所有路由注册
+- `backend/internal/middleware/middleware.go` — JWT 认证 + CORS 中间件
+- `backend/internal/handler/` — 全部处理器（Auth/Order/Warehouse/Transport/User）
+- `backend/pkg/response/response.go` — 统一响应格式 `{code, message, data, timestamp}`
+- `backend/pkg/utils/jwt.go` — JWT 生成/解析工具
+- `backend/sql/init.sql` — PostgreSQL 建表（与原项目共用）
 
 ## 📄 文档目录
 

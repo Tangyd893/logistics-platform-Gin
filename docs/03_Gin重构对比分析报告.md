@@ -204,10 +204,10 @@ java -Xms768m -Xmx768m -Xss512k \
 
 ```bash
 # 编译（耗时 <3s）
-go build -o logistics-gin .
+cd backend && go build -o logistics-gin .
 
 # 上传服务器（单文件，~19MB）
-scp logistics-gin server:/opt/app/
+scp backend/logistics-gin server:/opt/app/
 
 # 运行（无需任何运行时）
 ./logistics-gin
