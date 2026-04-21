@@ -6,22 +6,50 @@
 
 ```
 logistics-platform-Gin/
-├── backend/                # Go/Gin 后端（源码）
-│   ├── config/           # 配置
-│   ├── internal/          # 核心业务（model/handler/middleware/router）
-│   ├── pkg/               # 公共包（response/jwt）
-│   ├── sql/               # PostgreSQL 建表脚本
-│   └── main.go           # 入口
-├── frontend/             # React 18 前端（从原 logistics-platform 迁移）
+├── main.go                    # 入口：数据库连接 → AutoMigrate → 注册路由 → 监听 8080
+├── config/
+│   └── config.go            # 配置加载（DB/JWT/环境变量）
+├── internal/
+│   ├── model/               # 实体定义（GORM 模型）
+│   │   ├── system.go       # SysUser / SysRole / SysDept / SysMenu
+│   │   ├── order.go        # OOrder / OOrderItem / OOrderStatusLog
+│   │   ├── warehouse.go    # WhWarehouse / WhZone / WhLocation / WhInventory / WhInbound* / WhOutbound*
+│   │   └── transport.go    # TDriver / TVehicle / TWaybill / TTracking
+│   ├── handler/             # 请求处理层
+│   │   ├── auth.go         # 登录/刷新/当前用户/登出
+│   │   ├── order.go        # 订单 CRUD + 状态流转
+│   │   ├── user.go         # 用户 CRUD
+│   │   ├── warehouse.go    # 仓库/库位/入库/出库/库存
+│   │   └── transport.go    # 司机/车辆/运单/轨迹
+│   ├── middleware/
+│   │   └── middleware.go   # JWT 认证 / 角色权限检查 / CORS
+│   ├── router/
+│   │   └── router.go       # 路由注册（Gin 分组路由）
+│   └── service/
+│       ├── minio.go        # MinIO 对象存储
+│       ├── redis.go        # Redis 缓存
+│       └── rocketmq.go     # RocketMQ 消息队列
+├── pkg/
+│   ├── response/            # 统一响应封装
+│   │   └── response.go     # {code, message, data, timestamp}
+│   └── utils/
+│       └── jwt.go          # JWT 生成 / 解析 / 刷新令牌
+├── cmd/
+│   └── genpwd/main.go      # bcrypt 密码哈希生成工具
+├── frontend/                 # React 18 前端（从原 logistics-platform 迁移）
 │   ├── src/
-│   │   ├── lib/api.ts    # Axios 请求封装（与原项目完全兼容）
-│   │   ├── store/auth.ts # Zustand 认证状态
-│   │   └── pages/        # 全部业务页面
-│   ├── vite.config.ts    # Vite 配置
+│   │   ├── lib/api.ts      # Axios 请求封装（与原项目完全兼容）
+│   │   ├── store/auth.ts   # Zustand 认证状态
+│   │   └── pages/          # 全部业务页面
+│   ├── vite.config.ts      # Vite 配置
 │   └── package.json
-├── docker-compose.yml     # Docker 全家桶部署
-├── docs/                  # 项目文档
-└── test-e2e.mjs           # Playwright E2E 测试（13/13 通过）
+├── sql/
+│   └── init.sql            # PostgreSQL 建表脚本（与原项目共用）
+├── docker-compose.yml       # Docker 全家桶部署
+├── docs/                    # 项目文档
+├── test-e2e.mjs            # Playwright E2E 测试（13/13 通过）
+├── go.mod / go.sum         # Go 依赖
+└── logistics-gin           # 编译产物（二进制可执行文件）
 ```
 
 ## 🚀 快速启动
@@ -65,6 +93,8 @@ docker exec -i logistics_postgres psql -U logistics_user -d logistics \
 
 **3. 启动后端：**
 ```bash
+cd ~/.openclaw/workspace/output/logistics-platform-Gin
+
 # 编译
 go build -o logistics-gin .
 
@@ -102,7 +132,7 @@ npx vite --port 3000
 ## 🧪 测试
 
 ```bash
-# 后端单元测试
+# Go 单元测试
 go test ./...
 
 # Playwright E2E 测试（需先启动后端）
@@ -140,6 +170,7 @@ node test-e2e.mjs
 | `docs/01_系统概要设计说明书.md` | 架构设计、模块划分、业务流 |
 | `docs/02_接口设计说明书.md` | 所有 API 接口（含请求/响应示例） |
 | `docs/03_Gin重构对比分析报告.md` | Java vs Go 9维度对比分析 |
+| `docs/04_项目完成状态.md` | 项目完成状态记录 |
 
 ## 🔧 技术栈
 
